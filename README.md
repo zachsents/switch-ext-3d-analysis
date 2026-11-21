@@ -30,6 +30,8 @@ Connections:
 - Hetzner Cloud (`hetzner`, a key): an API token for the project boxes are rented in. FEA and CFD need it.
 - AI Gateway (`ai-gateway`, a key): a Vercel AI Gateway key, for `render`'s `ai_look` (about $0.05-0.14 a shot). Without it, everything else still works.
 
+A key kept from before connections moves in once: put `keys.json` (`{"hetzner": "…", "ai-gateway": "…"}`, 0600) in the spur's home; the first time one is needed it goes to the user's connections (account `default`) and leaves the file.
+
 `config.json` in the spur's home, every key optional:
 
 ```json

@@ -59,6 +59,31 @@ _keys = {}
 _keys_lock = threading.Lock()
 
 
+def adopt_kept(provider):
+    """A key kept for it before connections, in keys.json in its home ({provider: secret}), goes to the user's
+    connections (account "default") and leaves the file: whether one did. The secret is never logged."""
+    path = os.path.join(HOME, "keys.json")
+    try:
+        with open(path) as f:
+            kept = json.load(f)
+    except (OSError, ValueError):
+        return False
+    secret = kept.get(provider)
+    if not secret:
+        return False
+    app.ask("connections/adopt", {"provider": provider, "account": "default", "grant": {"secret": secret}}, timeout=15)
+    rest = {k: v for k, v in kept.items() if k != provider}
+    if rest:
+        fd = os.open(path + ".tmp", os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+        with os.fdopen(fd, "w") as f:
+            json.dump(rest, f)
+        os.replace(path + ".tmp", path)
+    else:
+        os.remove(path)
+    app.log(f"{provider}: adopted the kept key")
+    return True
+
+
 def key(provider):
     """A key connection's secret (the user's own, through the host), or None when there's none; cached a minute."""
     with _keys_lock:
@@ -67,6 +92,8 @@ def key(provider):
             return got[0]
     try:
         accounts = app.ask("connections/list", {"provider": provider}, timeout=15).get("accounts") or []
+        if not accounts and adopt_kept(provider):
+            accounts = app.ask("connections/list", {"provider": provider}, timeout=15).get("accounts") or []
         secret = app.ask("connections/token", {"provider": provider, "account": accounts[0]["account"]},
                          timeout=15).get("token") if accounts else None
     except Exception as e:  # noqa: BLE001
