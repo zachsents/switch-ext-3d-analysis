@@ -1,4 +1,4 @@
-"""analysis: 3D analysis of parts and models as one spur, on the one server in server.py: printability geometry and
+"""analysis: 3D analysis of parts and models as one extension, on the one server in server.py: printability geometry and
 mesh-python (mesh.py), FEA and CFD on rented Hetzner boxes (fea.py, cfd.py), photoreal Blender renders (render.py),
 and a listing's photos with sizes measured off them (photo.py). Each was its own Switchboard appendage until now.
 """

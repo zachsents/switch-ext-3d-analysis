@@ -1,14 +1,14 @@
 {
-  "name": "spur-3d-analysis",
+  "name": "switch-ext-3d-analysis",
   "version": "0.1.0",
   "private": true,
-  "description": "3D analysis as a Switch spur: printability geometry, FEA and CFD on rented Hetzner boxes, Blender renders, and sizes measured off listing photos.",
+  "description": "3D analysis as a Switch extension: printability geometry, FEA and CFD on rented Hetzner boxes, Blender renders, and sizes measured off listing photos.",
   "license": "MIT",
-  "repository": "github:zachsents/spur-3d-analysis",
+  "repository": "github:zachsents/switch-ext-3d-analysis",
   "scripts": {
     "check": "uvx ruff check --no-cache --select E9,F63,F7,F82 --exclude home . && python3 check.py"
   },
-  "spur": {
+  "extension": {
     "name": "analysis",
     "command": ["python3", "./main.py"],
     "shim": "switchboard",

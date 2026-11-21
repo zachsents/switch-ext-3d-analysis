@@ -665,7 +665,7 @@ def server_cores(server_type):
         "slots": {"type": "integer", "description": "Cores the matrix may use at once (default: the box's cores)."},
         "hours": {"type": "number", "description": "Its delete-by, in hours from now (default 8, at most 24): the box goes then whatever it's doing, after fetching what it can."},
         "keep_minutes": {"type": "integer", "description": "How long the box stays up once the matrix ends, for extend, add or shell (default 60; 0 deletes it at once)."},
-        "results": {"type": "string", "description": "Where results land here (default: the spur's home, results/<study id>)."},
+        "results": {"type": "string", "description": "Where results land here (default: the extension's home, results/<study id>)."},
         "pip": {"type": "array", "items": {"type": "string"}, "description": "Python packages for the box's venv, which the study's commands find on PATH (numpy is always there)."},
         "setup": {"type": "array", "items": {"type": "string"}, "description": "More shell commands run once on the box after OpenFOAM is in."},
         "env": {"type": "object", "description": "Environment for every case's commands."},

@@ -841,7 +841,7 @@ def check(parts, load=None, material="petg", mesh=None):
         "max_usd": {"type": "number", "description": "The most the box may cost (default 3): its delete-by comes early enough that it can't bill more."},
         "keep_minutes": {"type": "integer", "description": "How long the box stays up once every part is done, for add or shell (default 20; 0 deletes it at once)."},
         "timeout_minutes": {"type": "number", "description": "How long one part's solve may take (default 90)."},
-        "results": {"type": "string", "description": "Where results land here (default: the spur's home, results/<study id>)."},
+        "results": {"type": "string", "description": "Where results land here (default: the extension's home, results/<study id>)."},
     },
     "required": ["parts", "load"],
 })

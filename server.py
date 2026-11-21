@@ -1,4 +1,4 @@
-"""The analysis spur's one MCP server, which each part declares its tools on: mesh.py (printability geometry and
+"""The analysis extension's one MCP server, which each part declares its tools on: mesh.py (printability geometry and
 mesh-python), fea.py (FEA on a rented Hetzner box), cfd.py (OpenFOAM on a rented Hetzner box), render.py (Blender
 renders) and photo.py (a listing's photos, a size measured off a photo). Its shared pieces live here: its home, its
 config, and its keys (a connection each)."""
@@ -19,7 +19,7 @@ INSTRUCTIONS = (
     "a sliced plate's supports; convert turns a 3MF, STEP or scene file (.blend, FBX, glTF, OBJ, USD) into STLs; scene "
     "says what a scene file holds; coupon cuts a fit coupon; variants builds a parametric script's variants and "
     "measures each; set_spec and spec keep a job's spec (model, features, settings) and verify checks a sliced plate "
-    "against it; drawing makes a dimensioned drawing sheet. Pictures and files land in this spur's home (paths in "
+    "against it; drawing makes a dimensioned drawing sheet. Pictures and files land in this extension's home (paths in "
     "the answer) and save_to copies them to a folder. mesh-python (written to ~/.local/bin) runs any geometry script "
     "in the same pinned environment.\n"
     "FEA (fea_*): fea_check checks parts and a load without renting; fea_run rents a Hetzner box, runs gmsh and "

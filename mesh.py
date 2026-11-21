@@ -13,7 +13,7 @@ outline over them); `supports` reads where a sliced plate's supports meet the mo
 by blend_dump.py) into one STL per colour or material at the size asked; `scene` says what's in such a file before
 converting it. `coupon` cuts a printable fit coupon from a model (coupon.py, with manifold3d). `variants` builds a
 parametric model's variants from its own script (variants.py). `drawing` makes a dimensioned drawing sheet
-(drawing.py). `set_spec`, `spec` and `verify` keep a job's spec in this spur's home and check sliced plates against it.
+(drawing.py). `set_spec`, `spec` and `verify` keep a job's spec in this extension's home and check sliced plates against it.
 
 The geometry runs in mesh_worker.py, in its own environment that uv builds once (trimesh with Embree, shapely, scipy,
 matplotlib); this server needs only the standard library. Pictures and files it makes are kept in its home (out/),
@@ -1389,7 +1389,8 @@ def scene(file, ctx, units=None, include=None, exclude=None, show=True):
     return sbmcp.content(*blocks, structured=res)
 
 
-# Specs and verify: what a job's plates must be, kept in this spur's home, and each sliced plate checked against it
+# Specs and verify: what a job's plates must be, kept in this extension's home, and each sliced plate checked
+# against it
 
 
 FEATURE_KINDS = ("gap", "wall", "empty", "solid", "hole", "size", "volume")
@@ -1555,7 +1556,7 @@ def spec(job):
     "retire": {"type": "boolean", "description": "The job is done, or its spec no longer holds: plates are checked against nothing."}}})
 @calling
 def set_spec(job, ctx, model=None, others=None, features=None, drop=None, expect=None, why=None, retire=False):
-    """Set or change a job's spec: what its plates must be, kept in this spur's home so it outlives the task that heard it. The model its plates must be made of (the newest version; the one it replaces is kept as an earlier version a plate must not be), the features asked for as checkable measures in the model's coordinates (a chamfer's opening at each face, a slot's width, a hole's diameter, a cut that must be empty), and the settings (filament, color, printer, walls...). Set it the moment a change is asked for, and give the new model as soon as it's built, before any slicing; verify then checks every plate of the job against it. Answers too how the model measures on each feature, so a feature whose coordinates are wrong shows at once."""
+    """Set or change a job's spec: what its plates must be, kept in this extension's home so it outlives the task that heard it. The model its plates must be made of (the newest version; the one it replaces is kept as an earlier version a plate must not be), the features asked for as checkable measures in the model's coordinates (a chamfer's opening at each face, a slot's width, a hole's diameter, a cut that must be empty), and the settings (filament, color, printer, walls...). Set it the moment a change is asked for, and give the new model as soon as it's built, before any slicing; verify then checks every plate of the job against it. Answers too how the model measures on each feature, so a feature whose coordinates are wrong shows at once."""
     key = job_key(job)
     current = spec_of(key)
     if not any(x is not None for x in (model, others, features, drop, expect)) and not retire:
@@ -1858,7 +1859,7 @@ def drawing(ctx, parts, views, title=None, lines=None, header=None, notes=None, 
 
 def mesh_python_text():
     return ("#!/usr/bin/env python3\n"
-            "# mesh-python: Python in mesh's environment, for geometry scripts. The analysis spur writes this file and\n"
+            "# mesh-python: Python in mesh's environment, for geometry scripts. The analysis extension writes this file and\n"
             "# writes it again whenever it differs: change meshpython.py there instead.\n"
             "import sys\n"
             f"sys.path.insert(0, {HERE!r})\n"

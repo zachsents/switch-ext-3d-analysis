@@ -13,7 +13,7 @@ in pixels, crop and zoom, and scale the body by it. This is that, in a call or t
 - look(photo, box): a region zoomed, with a grid in the photo's own pixels, for picking those points.
 
 Amazon pages load by curl; when Amazon puts up a human check, they load in a background tab of the user's browser
-(spur-browser, through browser.py), and are never solved. Other stores' pages give their og:image, schema.org images
+(switch-ext-browser, through browser.py), and are never solved. Other stores' pages give their og:image, schema.org images
 and large <img>s. Image work runs in photo_worker.py in mesh's environment (meshpython.py: niced, memory-capped).
 """
 

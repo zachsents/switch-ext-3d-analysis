@@ -1,12 +1,12 @@
-"""The user's browser, through spur-browser's tools, called as another spur's tools.
+"""The user's browser, through the browser extension's tools, called as another extension's tools.
 
-A spur declares them in its reaches (`reaches={"calls": ["browser_act", "browser_run"]}`) and makes one
-`Browser(app)`. `op(args)` takes the ops a Switchboard macOS appendage's `browser` action took, which spur-browser's
-`act` takes as they are: navigate {url}, js {code}, text, look, click {element | match}, type {text, element?,
-submit?}, key {keys}, scroll {direction?}, back, reload, wait {text, gone?, timeout?} | {seconds}, upload {element,
-paths}, value {element}, tabs, attach {tab}, release, screenshot, sign_in {account?, otp?}, autofill {element, pick?},
-steps [ops]. `show` and `minimize` change nothing here (the tab stays in the background). What spur-browser doesn't
-keep (fill_secret, save_account, accounts) raises BrowserError.
+An extension declares them in its reaches (`reaches={"calls": ["browser_act", "browser_run"]}`) and makes one
+`Browser(app)`. `op(args)` takes the ops a Switchboard macOS appendage's `browser` action took, which the browser
+extension's `act` takes as they are: navigate {url}, js {code}, text, look, click {element | match}, type {text,
+element?, submit?}, key {keys}, scroll {direction?}, back, reload, wait {text, gone?, timeout?} | {seconds}, upload
+{element, paths}, value {element}, tabs, attach {tab}, release, screenshot, sign_in {account?, otp?}, autofill {element,
+pick?}, steps [ops]. `show` and `minimize` change nothing here (the tab stays in the background). What the browser
+extension doesn't keep (fill_secret, save_account, accounts) raises BrowserError.
 """
 import json
 
@@ -21,15 +21,15 @@ QUIET = {"show", "minimize"}
 
 class Browser:
     def __init__(self, app, session=None):
-        """`app` is the spur's sbmcp.Server; `session` names its tab (default: the spur's name)."""
+        """`app` is the extension's sbmcp.Server; `session` names its tab (default: the extension's name)."""
         self.app = app
         self.session = session or app.name
 
     def tool(self, name, wait=120, **arguments):
-        """One spur-browser tool's words (`act` or `run`), waiting up to `wait` seconds."""
+        """One browser extension tool's words (`act` or `run`), waiting up to `wait` seconds."""
         arguments.setdefault("session", self.session)
         try:
-            # As the agent sees it: spur-browser's own tool, under its spur's name.
+            # As the agent sees it: the browser extension's own tool, under its extension's name.
             result = self.app.call(f"browser_{name}", {k: v for k, v in arguments.items() if v is not None}, timeout=wait)
         except RuntimeError as e:
             raise BrowserError(f"{name}: {e}") from None
@@ -53,7 +53,7 @@ class Browser:
         if args.get("session"):
             self.session = args.pop("session")
         if op in UNOFFERED:
-            raise BrowserError(f"{op} isn't offered: spur-browser fills sign-ins and cards from the browser's own saved ones")
+            raise BrowserError(f"{op} isn't offered: the browser extension fills sign-ins and cards from the browser's own saved ones")
         if op in QUIET:
             return {}
         if op == "steps":
