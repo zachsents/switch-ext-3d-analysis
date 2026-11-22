@@ -43,8 +43,12 @@ def studies():
     return {"studies": [r for _, r in sorted(rows, key=lambda x: x[0], reverse=True)]}
 
 
+BASIC_CATALOG = "https://a2ui.org/specification/v1_0/catalogs/basic/catalog.json"
+
+
 app.widget("studies", "Studies", lambda: sbmcp.surface("studies", [
-    {"id": "root", "component": "Lines", "children": {"componentId": "study", "path": "/studies"}},
+    {"id": "root", "component": "List", "catalogId": BASIC_CATALOG,
+     "children": {"componentId": "study", "path": "/studies"}},
     {"id": "study", "component": "Row", "label": {"@path": "label"}, "mark": {"@path": "mark"},
      "detail": {"@path": "detail"}, "alert": {"@path": "alert"}, "values": {"@path": "values"},
      "progress": {"@path": "progress"}, "endsAt": {"@path": "endsAt"}},
