@@ -1899,6 +1899,10 @@ def keep_mesh_python():
     return out
 
 
+STARTING = ("its environment is being built", "its environment isn't checked yet")
+"""What health_facts says while mesh starts: no failure."""
+
+
 def health_facts():
     """How mesh itself is: its worker's environment (package versions, Embree, STEP), uv, the calls it answered and
     failed, its last error, disk."""
@@ -1934,6 +1938,9 @@ def heartbeat():
     env = f["env"] or {}
     v = env.get("versions") or {}
     starting = state["warming"] and not state["env_error"] and not [p for p in f["problems"] if "environment" not in p]
+    # What's wrong now, for Switch to send its agent to fix: an environment still being built (or not yet
+    # checked) is starting, not failing.
+    f["failing"] = "; ".join(p for p in f["problems"] if p not in STARTING) or None
     summary = ("Ready" if f["ok"] else "Starting: building its environment" if starting else
                "Can't measure: " + "; ".join(f["problems"])) + (
         f": trimesh {v.get('trimesh')}, Embree {'on' if env.get('embree') else 'off'}, "
