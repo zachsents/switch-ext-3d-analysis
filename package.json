@@ -13,6 +13,7 @@
     "command": ["python3", "./main.py"],
     "shim": "switchboard",
     "needs": ["macos"],
+    "heartbeat": 600000,
     "connections": [
       {"provider": "hetzner", "kind": "key", "label": "Hetzner Cloud", "scopes": [], "multiple": false},
       {"provider": "ai-gateway", "kind": "key", "label": "AI Gateway", "scopes": [], "multiple": false}
