@@ -85,7 +85,8 @@ def adopt_kept(provider):
 
 
 def key(provider):
-    """A key connection's secret (the user's own, through the host), or None when there's none; cached a minute."""
+    """A key connection's secret (the user's own, through the host), or None when there's none; cached a minute. None
+    isn't cached: just started, the core may not have answered yet, and the next call asks again."""
     with _keys_lock:
         got = _keys.get(provider)
         if got and time.time() - got[1] < 60:
@@ -99,6 +100,7 @@ def key(provider):
     except Exception as e:  # noqa: BLE001
         app.log(f"{provider}: no key: {e}")
         secret = None
-    with _keys_lock:
-        _keys[provider] = (secret, time.time())
+    if secret is not None:
+        with _keys_lock:
+            _keys[provider] = (secret, time.time())
     return secret
