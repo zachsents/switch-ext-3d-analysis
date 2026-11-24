@@ -1,6 +1,6 @@
 """Hetzner Cloud: the one place fea and cfd reach it (api()), with the user's Hetzner key (a connection).
 
-Every box carries labels temp=true, made_by=fea|cfd, study=<the study's id> and delete_by=<YYYYMMDDTHHMM+0000>,
+Every box carries labels temp=true, made_by=fea|cfd, study=<the study's id> and delete_by=<YYYYMMDDTHHMMZ> (UTC),
 so anything left behind says whose it is and when it goes.
 """
 
@@ -49,15 +49,20 @@ def api(method, path, body=None, timeout=30):
 
 
 def label_time(ms):
-    """A time as a label value, in UTC: 20261119T1100+0000."""
-    return datetime.datetime.fromtimestamp(ms / 1000, datetime.timezone.utc).strftime("%Y%m%dT%H%M%z")
+    """A time as a label value, in UTC: 20261119T1100Z (Hetzner label values allow only [A-Za-z0-9._-], no '+')."""
+    return datetime.datetime.fromtimestamp(ms / 1000, datetime.timezone.utc).strftime("%Y%m%dT%H%MZ")
 
 
 def parse_label_time(text):
-    """A delete_by label back to ms since 1970, or None."""
+    """A delete_by label back to ms since 1970, or None. Reads 20261119T1100Z and the older 20261119T1100+0000."""
+    if not isinstance(text, str):
+        return None
+    t = text.strip()
+    if t.endswith("Z"):
+        t = t[:-1] + "+0000"
     try:
-        return int(datetime.datetime.strptime(text, "%Y%m%dT%H%M%z").timestamp() * 1000)
-    except (ValueError, TypeError):
+        return int(datetime.datetime.strptime(t, "%Y%m%dT%H%M%z").timestamp() * 1000)
+    except ValueError:
         return None
 
 

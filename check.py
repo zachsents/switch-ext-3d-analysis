@@ -19,6 +19,14 @@ manifest = pkg["extension"]
 assert manifest.get("name") and manifest.get("command") and manifest.get("shim") == "switchboard", "check: extension manifest"
 
 import sbmcp  # noqa: E402
+import hetzner  # noqa: E402
+
+_ms = 1795475700000  # 2026-11-23T23:15Z
+assert re.fullmatch(r"[A-Za-z0-9]([A-Za-z0-9._-]{0,61}[A-Za-z0-9])?", hetzner.label_time(_ms)), "check: delete_by label isn't a valid Hetzner label value"
+assert hetzner.label_time(_ms) == "20261123T2315Z", "check: delete_by label format"
+assert hetzner.parse_label_time(hetzner.label_time(_ms)) == _ms, "check: delete_by label round trip"
+assert hetzner.parse_label_time("20261123T2315+0000") == _ms, "check: old delete_by labels still read"
+assert hetzner.parse_label_time("") is None and hetzner.parse_label_time(None) is None, "check: bad delete_by labels"
 
 main = importlib.import_module("main")
 app = next((v for v in vars(main).values() if isinstance(v, sbmcp.Server)), None)
