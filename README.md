@@ -1,3 +1,5 @@
+**Moved to [zachsents/switch](https://github.com/zachsents/switch/tree/main/extensions/3d-analysis).** This repo is archived.
+
 # switch-ext-3d-analysis
 
 3D analysis of parts and models: printability geometry, FEA and CFD on rented Hetzner boxes, photoreal Blender renders, and sizes measured off a listing's photos.
