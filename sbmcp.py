@@ -95,6 +95,17 @@ os.dup2(2, 1)
 sys.stdout = os.fdopen(1, "w", buffering=1, encoding="utf-8", closefd=False)
 atexit.register(_MCP.close)
 
+# Likewise MCP gets the real stdin on an fd of its own, kept blocking, and fd 0 is /dev/null. A child that
+# inherited the host's pipe could set it non-blocking (the flag lives on the pipe, shared by every process holding
+# it): the next read with nothing waiting then came back empty, `for line in sys.stdin` took that for the end, and
+# the server exited 0 while the host still held the pipe open (the analysis extension, Nov 23, after mesh's warm).
+_IN_FD = os.dup(0)
+os.set_blocking(_IN_FD, True)
+_null = os.open(os.devnull, os.O_RDONLY)
+os.dup2(_null, 0)
+os.close(_null)
+_IN = os.fdopen(_IN_FD, "r", buffering=1, encoding="utf-8")
+
 MODERN = "2026-07-28"
 LEGACY = ["2025-11-25", "2025-06-18", "2025-03-26", "2024-11-05"]
 EVENTS = "io.modelcontextprotocol/events"
@@ -316,7 +327,7 @@ class Server:
 
     def run(self):
         """Serves MCP on stdin and stdout until stdin closes."""
-        self.serve(sys.stdin, _MCP)
+        self.serve(_IN, _MCP)
         # stdin closed: the keeper is done with this server.
         _MCP.flush()
 
