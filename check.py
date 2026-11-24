@@ -44,3 +44,37 @@ declared = set(manifest.get("widgets") or [])
 assert declared == {w["_meta"][sbmcp.WIDGET]["name"] for w in widgets}, "check: manifest widgets"
 speaks = [n for n, t in tools.items() if t["annotations"].get("speaksForPerson")]
 print(f"{manifest['name']}: {len(names)} tools ({len(speaks)} speak for the user), {len(events)} events, {len(widgets)} widgets")
+
+# cfd_keep: the box's delete_by label (other labels kept) and the study change together, within the 24 h cap
+import tempfile  # noqa: E402
+import cfd  # noqa: E402
+
+_servers = {7: {"id": 7, "labels": {"temp": "true", "made_by": "cfd", "study": "s", "delete_by": "20261123T2315Z"}}}
+
+
+def _api(method, path, body=None):
+    sid = int(path.rsplit("/", 1)[1])
+    if method == "PUT":
+        _servers[sid]["labels"] = dict(body["labels"])
+    return {"server": _servers[sid]}
+
+
+cfd.api, cfd.emit_study, cfd.HOME = _api, lambda st, force=False: None, tempfile.mkdtemp()
+_c = _ms - 3_600_000
+cfd.save({"id": "s", "name": "s", "state": "done", "round": 2, "created": _c, "delete_by": _ms, "keep_minutes": 60,
+          "done_at": _c, "box": {"id": 7}})
+cfd.now_ms = lambda: _ms - 600_000
+_r = cfd.keep("s", keep_minutes=240, delete_by="2026-11-24T08:15Z")
+_s = cfd.load("s")
+assert _r["label"] == "20261124T0815Z" == _servers[7]["labels"]["delete_by"], "check: keep relabels the box"
+assert _servers[7]["labels"]["study"] == "s" and _servers[7]["labels"]["made_by"] == "cfd", "check: keep keeps the other labels"
+assert _s["delete_by"] == hetzner.parse_label_time("20261124T0815Z") and _s["keep_minutes"] == 240, "check: keep saves the study"
+assert _s["done_at"] == _ms - 600_000, "check: a kept study's keep counts from now"
+assert cfd.keep("s", delete_by=2)["delete_by_ms"] == _ms - 600_000 + 7_200_000, "check: keep's delete_by in hours"
+for _bad in ({"delete_by": 30}, {"delete_by": "2026-11-23T20:00Z"}, {}):
+    try:
+        cfd.keep("s", **_bad)
+        raise AssertionError(f"check: keep took {_bad}")
+    except ValueError:
+        pass
+assert cfd.load("s")["delete_by"] == _ms - 600_000 + 7_200_000, "check: a refused keep changes nothing"

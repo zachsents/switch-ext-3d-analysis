@@ -771,7 +771,7 @@ def status(study: str = ""):
                 "counts": (st.get("status") or {}).get("counts"), "cores_used": (st.get("status") or {}).get("cores_used"),
                 "slots": st.get("slots"), "load": (st.get("status") or {}).get("load"),
                 "cases": case_rows(st.get("status")), "results": st["results"], "fetched": st.get("fetched"),
-                "delete_by": pt(st.get("delete_by")), "cost": cost, "currency": st.get("currency"), "hours": hours,
+                "delete_by": pt(st.get("delete_by")), "keep_minutes": st.get("keep_minutes"), "cost": cost, "currency": st.get("currency"), "hours": hours,
                 "verified_clean": st.get("verified_clean"), "left": st.get("left"), "error": st.get("error") or st.get("status_error")}
     out = {"token": bool(hetzner.token()), "studies": [
         {"study": s["id"], "name": s.get("name"), "state": s["state"], "box_state": s.get("box_state"),
@@ -885,6 +885,95 @@ def extend(study, ctx, cases=None, to=None, by=None, averages="continue"):
         next_round(st)
         push_study_json(st)
     return {"study": st["id"], "round": st["round"], "extending": names, "to": to, "by": by, "averages": averages}
+
+
+def parse_delete_by(value, now):
+    """A delete-by as given to keep: hours from now (a number), or an ISO time (local time unless it says its zone)."""
+    import datetime
+    if isinstance(value, bool):
+        raise ValueError("delete_by: hours from now, or an ISO time")
+    if isinstance(value, (int, float)):
+        return now + int(float(value) * 3_600_000)
+    text_ = str(value).strip()
+    try:
+        return now + int(float(text_) * 3_600_000)
+    except ValueError:
+        pass
+    try:
+        t = datetime.datetime.fromisoformat(text_.replace("Z", "+00:00"))
+    except ValueError:
+        raise ValueError(f"delete_by: {value!r} is neither hours from now nor an ISO time")
+    if t.tzinfo is None:
+        t = t.astimezone()  # local time
+    return int(t.timestamp() * 1000)
+
+
+def relabel(server_id, delete_by):
+    """Sets a box's delete_by label (its other labels kept) and answers the label as Hetzner reads it back."""
+    labels = dict(api("GET", f"/servers/{server_id}")["server"].get("labels") or {})
+    labels["delete_by"] = hetzner.label_time(delete_by)
+    api("PUT", f"/servers/{server_id}", {"labels": labels})
+    return (api("GET", f"/servers/{server_id}")["server"].get("labels") or {}).get("delete_by")
+
+
+def keep_study(st, keep_minutes=None, delete_by=None, now=None):
+    """Changes a held study's keep and delete-by: the box's delete_by label first (so reap agrees), then the study."""
+    now = now or now_ms()
+    if st["state"] not in ACTIVE or st["state"] == "deleting":
+        raise ValueError(f"{st['id']} is {st['state']}: its box is gone or going")
+    if keep_minutes is None and delete_by is None:
+        raise ValueError("keep needs keep_minutes or delete_by")
+    if keep_minutes is not None and int(keep_minutes) < 0:
+        raise ValueError("keep_minutes: 0 or more")
+    due = None
+    if delete_by is not None:
+        due = parse_delete_by(delete_by, now)
+        cap = st["created"] + MAX_HOURS * 3_600_000
+        if due <= now:
+            raise ValueError(f"delete_by: {pt(due)} has passed (cfd_delete takes the box down now)")
+        if due > cap:
+            raise ValueError(f"delete_by: at most {MAX_HOURS} h after the study was made, {pt(cap)}")
+    label = None
+    box = (st.get("box") or {}).get("id")
+    if due is not None:
+        if box:
+            label = relabel(box, due)
+            if label != hetzner.label_time(due):
+                raise ValueError(f"Hetzner reads the box's delete_by back as {label!r}, not {hetzner.label_time(due)}")
+        st["delete_by"] = due
+    elif box:
+        label = (api("GET", f"/servers/{box}")["server"].get("labels") or {}).get("delete_by")
+    if keep_minutes is not None:
+        st["keep_minutes"] = int(keep_minutes)
+        if st["state"] == "done":
+            st["done_at"] = now  # a kept box's keep counts from now
+            st["box_state"] = f"kept {st['keep_minutes']} min for follow-ups"
+    return label
+
+
+@app.tool(name="cfd_keep", speaks_for_person=True, schema={
+    "type": "object",
+    "properties": {
+        "study": {"type": "string", "description": "The study (its id or name)."},
+        "keep_minutes": {"type": "integer", "description": "How long the box stays up once the matrix ends (on a study already done and kept: from now; 0 deletes it at its next look)."},
+        "delete_by": {"description": "Its new delete-by: hours from now (a number), or an ISO time (local unless it gives its zone), at most 24 h after the study was made. Later keeps the box (and its bill) longer; sooner takes it down sooner."},
+    },
+    "required": ["study"],
+})
+def keep(study, ctx=None, keep_minutes=None, delete_by=None):
+    "Pushes a live study's box self-delete back or pulls it in: its keep after the matrix ends and its hard delete-by (the box's Hetzner label too). Answers both, and the label read back from Hetzner."
+    state["calls"] += 1
+    try:
+        with holding(find(study)["id"]) as st:
+            label = keep_study(st, keep_minutes=keep_minutes, delete_by=delete_by)
+            emit_study(st, force=True)
+        return {"study": st["id"], "state": st["state"], "keep_minutes": st["keep_minutes"],
+                "delete_by": pt(st["delete_by"]), "delete_by_ms": st["delete_by"], "label": label,
+                "box_state": st.get("box_state")}
+    except Exception as e:
+        state["failed"] += 1
+        state["last_error"] = f"keep: {e}"
+        raise
 
 
 @app.tool(name="cfd_cancel", schema={

@@ -6,11 +6,11 @@ A [Switch](https://switch.ax) extension: a Python MCP server (`sbmcp.py`, Switch
 
 - Mesh (`mesh.py`): `report`, `section`, `view`, `layers`, `supports`, `support_model`, `convert`, `scene`, `coupon`, `variants`, `drawing`, and `set_spec` / `spec` / `verify` for a job's sliced plates. It also writes `~/.local/bin/mesh-python`, a Python with the same pinned geometry packages.
 - FEA (`fea_*`): gmsh and CalculiX on a temporary Hetzner box.
-- CFD (`cfd_*`): an OpenFOAM case matrix on a temporary Hetzner box.
+- CFD (`cfd_*`): an OpenFOAM case matrix on a temporary Hetzner box; `cfd_keep` moves a live study's keep and delete-by (and its box's label).
 - Render (`render`, `render_scenes`): Blender Cycles in a standard scene, with an optional AI print-look pass.
 - Photos (`photos`, `measure`, `look`): a listing's photos and a part's size measured off a photo.
 
-`fea_run`, `fea_add`, `cfd_start`, `cfd_add` and `cfd_extend` rent or keep a paid box, so they speak for the user. The background loop only watches, fetches results and deletes the extension's own boxes once they're done or past their delete-by.
+`fea_run`, `fea_add`, `cfd_start`, `cfd_add`, `cfd_extend` and `cfd_keep` rent or keep a paid box, so they speak for the user. The background loop only watches, fetches results and deletes the extension's own boxes once they're done or past their delete-by.
 
 ## Install
 
